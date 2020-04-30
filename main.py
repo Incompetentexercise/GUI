@@ -8,18 +8,22 @@ fonts = {
 }
 colors = {
     'green': '#30DD30',
-    'grey': '#AAAAAA'
+    'grey': '#AAAAAA',
+    'frame bg': '#FCFCFC'
 }
 help_text = "First select a temperature to convert from by clicking one of the unit buttons on the far left.\n\n" \
             "Then input a temperature into the enabled text box.\n\n" \
             "Take care not to enter a temperature below absolute zero.\n\n" \
             "After this, press the convert button to see the converted values."
-frame_bg = '#FCFCFC'
 
 
 class Converter:
     def __init__(self, parent):
-        self.input = 'c'
+        self.unit = None
+        self.input_temp = None
+        self.C_out = 0
+        self.F_out = 0
+        self.K_out = 0
 
         self.root = parent # parent should be an instance of tk.Tk()
 
@@ -27,8 +31,8 @@ class Converter:
         # far left frame for temperature input
         self.input_frame = tk.Frame(
             self.root,
-            bg=frame_bg,
-            padx=15, pady=15,
+            bg=colors['frame bg'],
+            padx=10, pady=10,
             borderwidth=1,
             relief='sunken'
         )
@@ -42,45 +46,76 @@ class Converter:
         # right frame for temperature output
         self.output_frame = tk.Frame(
             self.root,
-            bg=frame_bg,
-            padx=30, pady=30
+            bg=colors['frame bg'],
+            padx=10, pady=10,
+            borderwidth=1,
+            relief='sunken'
         )
         self.output_frame.grid(row=30, column=10)
 
-        #input title
+        #       INPUT SETUP       ~
+
         self.input_title = tk.Label(
             self.input_frame,
             text="Input",
             font=fonts['heading'],
-            bg=frame_bg,
+            bg=colors['frame bg'],
             padx=5
         )
         self.input_title.grid(
             row=5, column=10,
-            columnspan=2
+            columnspan=11
         )
 
-        # input setup
-        self.celsius_button = tk.Button(
+        self.input_temp = tk.StringVar()
+        self.input_temp.trace_add("write", self.do_conversion)
+        self.temp_entry = tk.Entry(
+            self.input_frame,
+            textvariable=self.input_temp
+        )
+        self.temp_entry.grid(row=30, column=10)
+
+        self.input_unit = tk.StringVar(None, 'c')
+        self.input_unit.trace_add("write", self.do_conversion)
+
+        self.C_radio = tk.Radiobutton(
             self.input_frame,
             text="C\u00B0",
-            bg=colors['green'],
-            font=fonts['heading'],
-            relief='groove'
+            variable=self.input_unit,
+            value='c',
+            background=colors['frame bg']
         )
-        self.celsius_button.grid(row=10, column=10)
-
-        self.fahrenheit_button = tk.Button(
+        self.C_radio.grid(row=20, column=20)
+        self.F_radio = tk.Radiobutton(
             self.input_frame,
             text="F\u00B0",
-            bg=colors['grey'],
-            font=fonts['heading'],
-            relief='groove'
+            variable=self.input_unit,
+            value='f',
+            background=colors['frame bg']
         )
-        self.fahrenheit_button.grid(row=20, column=10)
+        self.F_radio.grid(row=30, column=20)
+        self.K_radio = tk.Radiobutton(
+            self.input_frame,
+            text="K\u00B0",
+            variable=self.input_unit,
+            value='k',
+            background=colors['frame bg']
+        )
+        self.K_radio.grid(row=40, column=20)
+
+        #      MIDDLE SETUP      ~
+        self.error_message = tk.StringVar()
+        self.error_label = tk.Label(
+            self.center_frame,
+            textvariable=self.error_message,
+            font=fonts['body'],
+            fg='#CC2020'
+        )
+        self.error_label.grid(row=10, column=10)
 
         self.help_button = tk.Button(
             self.center_frame,
+            command=self.open_help,
             text="Help",
             font=fonts['button'],
             relief="groove",
@@ -88,9 +123,79 @@ class Converter:
         )
         self.help_button.grid(row=40, column=10)
 
+        #      OUTPUT SETUP      ~
+
+        self.output_label = tk.Label(
+            self.output_frame,
+            text='Output',
+            font=fonts['heading'],
+            bg=colors['frame bg']
+        )
+        self.output_label.grid(row=5, column=10, columnspan=11)
+
+        self.C_out_label = tk.Label(
+            self.output_frame,
+            text="C\u00B0",
+            bg=colors['frame bg']
+        )
+        self.C_out_label.grid(row=10, column=10)
+
+        self.F_out_label = tk.Label(
+            self.output_frame,
+            text="F\u00B0",
+            bg=colors['frame bg']
+        )
+        self.F_out_label.grid(row=20, column=10)
+
+        self.K_out_label = tk.Label(
+            self.output_frame,
+            text="K\u00B0",
+            bg=colors['frame bg']
+        )
+        self.K_out_label.grid(row=30, column=10)
+
+        self.C_out_entry = tk.Entry(
+            self.output_frame,
+        )
+        self.C_out_entry.grid(row=10, column=20)
+
+        self.F_out_entry = tk.Entry(
+            self.output_frame,
+        )
+        self.F_out_entry.grid(row=20, column=20)
+
+        self.K_out_entry = tk.Entry(
+            self.output_frame,
+        )
+        self.K_out_entry.grid(row=30, column=20)
+
     def open_help(self):
         self.help_button.config(state=tk.DISABLED)
         help_window = Help(self)
+
+    def do_conversion(self, *args):
+        self.unit = self.input_unit.get()
+
+        try:
+            self.float_input = float(self.input_temp.get())
+            self.error_message.set('')
+
+            if self.unit == 'c':
+                self.C_out = self.float_input
+                self.F_out = (self.float_input * 9 / 5) + 32
+                self.K_out = self.float_input + 273.15
+
+        except ValueError:
+            self.error_message.set('Invalid input')
+
+        self.C_out_entry.delete(0, 'end')
+        self.C_out_entry.insert(0, str(self.C_out))
+
+        self.F_out_entry.delete(0, 'end')
+        self.F_out_entry.insert(0, str(self.F_out))
+
+        self.K_out_entry.delete(0, 'end')
+        self.K_out_entry.insert(0, str(self.K_out))
 
 
 class Help:
