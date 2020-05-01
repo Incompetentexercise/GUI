@@ -104,6 +104,7 @@ class Converter:
         self.K_radio.grid(row=40, column=20)
 
         #      MIDDLE SETUP      ~
+
         self.error_message = tk.StringVar()
         self.error_label = tk.Label(
             self.center_frame,
@@ -113,15 +114,34 @@ class Converter:
         )
         self.error_label.grid(row=10, column=10)
 
+        self.instruction_label = tk.Label(
+            self.center_frame,
+            text="Input a temperature and it’s unit above, the converted value will be shown below.",
+            font=fonts['body'],
+            wraplength=180,
+            justify=tk.CENTER
+        )
+        self.instruction_label.grid(row=20, column=10, columnspan=11, pady=3)
+
+        self.history_button = tk.Button(
+            self.center_frame,
+            command=self.open_history,
+            text="History",
+            font=fonts['button'],
+            relief='groove',
+            padx=10, pady=5
+        )
+        self.history_button.grid(row=40, column=10, padx=10)
+
         self.help_button = tk.Button(
             self.center_frame,
             command=self.open_help,
             text="Help",
             font=fonts['button'],
             relief="groove",
-            padx=10, pady=10
+            padx=10, pady=5
         )
-        self.help_button.grid(row=40, column=10)
+        self.help_button.grid(row=40, column=20, padx=10)
 
         #      OUTPUT SETUP      ~
 
@@ -172,6 +192,9 @@ class Converter:
     def open_help(self):
         self.help_button.config(state=tk.DISABLED)
         help_window = Help(self)
+
+    def open_history(self):
+        pass
 
     def do_conversion(self, *args):
         self.unit = self.input_unit.get()
