@@ -11,10 +11,10 @@ colors = {
     'grey': '#AAAAAA',
     'frame bg': '#FCFCFC'
 }
-help_text = "First select a temperature to convert from by clicking one of the unit buttons on the far left.\n\n" \
-            "Then input a temperature into the enabled text box.\n\n" \
+help_text = "Type in the temperature you want to convert from into the input box, and select it's unit.\n\n" \
+            "The converted value will show in the output box.\n\n" \
             "Take care not to enter a temperature below absolute zero.\n\n" \
-            "After this, press the convert button to see the converted values."
+            "You can press the history button to view past conversions"
 
 
 class Converter:
@@ -184,6 +184,16 @@ class Converter:
                 self.C_out = self.float_input
                 self.F_out = (self.float_input * 9 / 5) + 32
                 self.K_out = self.float_input + 273.15
+
+            elif self.unit == 'f':
+                self.C_out = (self.float_input - 32) * 5/9
+                self.F_out = self.float_input
+                self.K_out = ((self.float_input - 32) * 5/9) + 273.15
+
+            elif self.unit == 'k':
+                self.C_out = self.float_input - 273.15
+                self.F_out = ((self.float_input - 273.15) * 9/5) + 32
+                self.K_out = self.float_input
 
         except ValueError:
             self.error_message.set('Invalid input')
