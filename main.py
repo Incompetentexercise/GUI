@@ -15,6 +15,7 @@ help_text = "Type in the temperature you want to convert from into the input box
             "The converted value will show in the output box.\n\n" \
             "Take care not to enter a temperature below absolute zero.\n\n" \
             "You can press the history button to view past conversions"
+decimal_places = 2
 
 
 class Converter:
@@ -24,6 +25,7 @@ class Converter:
         self.C_out = 0
         self.F_out = 0
         self.K_out = 0
+        self.float_input = 0
 
         self.root = parent # parent should be an instance of tk.Tk()
 
@@ -112,7 +114,7 @@ class Converter:
             font=fonts['body'],
             fg='#CC2020'
         )
-        self.error_label.grid(row=10, column=10)
+        self.error_label.grid(row=10, column=10, columnspan=11)
 
         self.instruction_label = tk.Label(
             self.center_frame,
@@ -196,33 +198,69 @@ class Converter:
     def open_history(self):
         pass
 
+    # convert the inputted value to other units and set the output boxes
+    # also does checks to ensure validity
     def do_conversion(self, *args):
+        # get an ascii version of the unit from the linked tkinter variable
         self.unit = self.input_unit.get()
 
         try:
+            # try to get the temperature input from the input box and convert to float
             self.float_input = float(self.input_temp.get())
-            self.error_message.set('')
+            self.error_message.set('') # float conversion successful, clear errors message
 
+            # do conversions and checks for below absolute zero
             if self.unit == 'c':
-                self.C_out = self.float_input
-                self.F_out = (self.float_input * 9 / 5) + 32
-                self.K_out = self.float_input + 273.15
+                if self.float_input < -273.15:
+                    self.error_message.set('Input below absolute zero')
+                    self.C_out, self.F_out, self.K_out = '>:(', '>:(', '>:('
+                else:
+                    self.C_out = self.float_input
+                    self.F_out = (self.float_input * 9 / 5) + 32
+                    self.K_out = self.float_input + 273.15
 
             elif self.unit == 'f':
-                self.C_out = (self.float_input - 32) * 5/9
-                self.F_out = self.float_input
-                self.K_out = ((self.float_input - 32) * 5/9) + 273.15
+                if self.float_input < -460:
+                    self.error_message.set('Input below absolute zero')
+                    self.C_out, self.F_out, self.K_out = ';-(', ';-(', ';-('
+                else:
+                    self.C_out = (self.float_input - 32) * 5/9
+                    self.F_out = self.float_input
+                    self.K_out = ((self.float_input - 32) * 5/9) + 273.15
 
             elif self.unit == 'k':
-                self.C_out = self.float_input - 273.15
-                self.F_out = ((self.float_input - 273.15) * 9/5) + 32
-                self.K_out = self.float_input
+                if self.float_input < 0:
+                    self.error_message.set('Input below absolute zero')
+                    self.C_out, self.F_out, self.K_out = '(ノಠ益ಠ)ノ彡┻━┻', 'ヽ(`Д´)ﾉ︵ ┻━┻', '(╯°□°）╯︵ ┻━┻'
+                else:
+                    self.C_out = self.float_input - 273.15
+                    self.F_out = ((self.float_input - 273.15) * 9/5) + 32
+                    self.K_out = self.float_input
 
-        except ValueError:
-            self.error_message.set('Invalid input')
+        except ValueError: # float conversion failed
+            # if there is a value in the text box
+            if self.input_temp.get() != '':
+                # input is present but invalid
+                self.error_message.set('Invalid input')
+                self.C_out, self.F_out, self.K_out = ':(', ':(', ':('
 
-        self.C_out_entry.delete(0, 'end')
-        self.C_out_entry.insert(0, str(self.C_out))
+            else:
+                # there is no input
+                self.error_message.set('')
+                self.C_out, self.F_out, self.K_out = 0, 0, 0
+
+        try:
+            # try to round the temperature values to avoid horrible recurring decimals
+            self.C_out = round(self.C_out, decimal_places)
+            self.F_out = round(self.F_out, decimal_places)
+            self.K_out = round(self.K_out, decimal_places)
+        except TypeError:
+            # for when there is text in the output boxes so rounding doesnt work
+            pass
+
+        # set the output boxes to the values in the output variables
+        self.C_out_entry.delete(0, 'end') # clear the output box
+        self.C_out_entry.insert(0, str(self.C_out)) # insert output value
 
         self.F_out_entry.delete(0, 'end')
         self.F_out_entry.insert(0, str(self.F_out))
@@ -254,6 +292,12 @@ class Help:
     def close(self):
         self.parent.help_button.config(state=tk.NORMAL)
         self.root.destroy()
+
+
+class HistoryWindow:
+    def __init__(self, parent):
+        self.parent = parent
+        self.root = tk.Toplevel(master=self.parent.root)
 
 
 if __name__ == "__main__":
