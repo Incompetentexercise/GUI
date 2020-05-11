@@ -4,7 +4,8 @@ import tkinter.ttk as ttk
 fonts = {
     "heading": ("Arial", "14", "bold"),
     "body": ('Arial', '10'),
-    "button": ('Arial', '12', 'bold')
+    "button": ('Arial', '12', 'bold'),
+    'list': ('Arial', '9')
 }
 colors = {
     'green': '#30DD30',
@@ -26,6 +27,7 @@ class Converter:
         self.F_out = 0
         self.K_out = 0
         self.float_input = 0
+        self.output_string = ""
 
         self.root = parent # parent should be an instance of tk.Tk()
 
@@ -191,12 +193,32 @@ class Converter:
         )
         self.K_out_entry.grid(row=30, column=20)
 
+        self.save_button = tk.Button(
+            self.output_frame,
+            text='save',
+            font=fonts['button'],
+            relief="groove",
+            padx=10, pady=2,
+            command=self.save_conversion
+        )
+        self.save_button.grid(row=40, column=10, columnspan=11)
+
     def open_help(self):
         self.help_button.config(state=tk.DISABLED)
         help_window = Help(self)
 
     def open_history(self):
-        pass
+        self.history_button.config(state=tk.DISABLED)
+        history_window = History(self)
+
+    def save_conversion(self):
+        self.output_string = "{inp}{in_unit} ---> {C}C {F}F {K}K".format(
+            inp=str(self.float_input), in_unit=self.unit.upper(),
+            C=str(self.C_out), F=str(self.F_out), K=str(self.K_out),
+        )
+        print(self.output_string)
+        with open("history.txt", 'a') as file:
+            file.write(self.output_string+"\n")
 
     # convert the inputted value to other units and set the output boxes
     # also does checks to ensure validity
@@ -294,10 +316,45 @@ class Help:
         self.root.destroy()
 
 
-class HistoryWindow:
+class History:
     def __init__(self, parent):
         self.parent = parent
         self.root = tk.Toplevel(master=self.parent.root)
+        self.root.title("Conversion History")
+        # self.root.geometry("290x250")
+        # bind the window close button to the close function in this class
+        # important for enabling the history button
+        self.root.protocol('WM_DELETE_WINDOW', self.close)
+        self.history = []
+
+        self.history_frame = tk.Frame(self.root)
+        self.history_frame.grid(row=10, column=10)
+
+        self.history_list = tk.Listbox(
+            self.history_frame,
+            width=40,
+            height=15,
+            font=fonts['list']
+        )
+        self.history_list.pack(side="left", fill="y")
+
+        self.list_scroll = tk.Scrollbar(self.history_frame,
+                                        orient='vertical',
+                                        command=self.history_list.yview
+                                        )
+        self.list_scroll.pack(side='right', fill='y')
+
+        self.history_list.config(yscrollcommand=self.list_scroll.set)
+
+        with open('history.txt', 'r') as file:
+            for line in file:
+                self.history.append(line)
+        for item in self.history:
+            self.history_list.insert(tk.END, item)
+
+    def close(self):
+        self.parent.history_button.config(state=tk.NORMAL)
+        self.root.destroy()
 
 
 if __name__ == "__main__":
