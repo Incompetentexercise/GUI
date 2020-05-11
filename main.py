@@ -5,7 +5,7 @@ fonts = {
     "heading": ("Arial", "14", "bold"),
     "body": ('Arial', '10'),
     "button": ('Arial', '12', 'bold'),
-    'list': ('Arial', '9')
+    'list': ('Arial', '10')
 }
 colors = {
     'green': '#30DD30',
@@ -212,7 +212,7 @@ class Converter:
         history_window = History(self)
 
     def save_conversion(self):
-        self.output_string = "{inp}{in_unit} ---> {C}C {F}F {K}K".format(
+        self.output_string = "{inp}{in_unit}   --->   {C}C    {F}F    {K}K".format(
             inp=str(self.float_input), in_unit=self.unit.upper(),
             C=str(self.C_out), F=str(self.F_out), K=str(self.K_out),
         )
@@ -325,11 +325,13 @@ class History:
         # bind the window close button to the close function in this class
         # important for enabling the history button
         self.root.protocol('WM_DELETE_WINDOW', self.close)
-        self.history = []
+        self.history = [] # holds the history items read from file
 
+        # frame to hold the list of history items and a scrollbar for the list
         self.history_frame = tk.Frame(self.root)
         self.history_frame.grid(row=10, column=10)
 
+        # list of all the previous calculations in history file
         self.history_list = tk.Listbox(
             self.history_frame,
             width=40,
@@ -338,17 +340,21 @@ class History:
         )
         self.history_list.pack(side="left", fill="y")
 
+        # scrollbar for when there are a lot of items in history
         self.list_scroll = tk.Scrollbar(self.history_frame,
                                         orient='vertical',
                                         command=self.history_list.yview
                                         )
         self.list_scroll.pack(side='right', fill='y')
 
+        # link history list to scrollbar
         self.history_list.config(yscrollcommand=self.list_scroll.set)
 
+        # read history file and put contents into history list
         with open('history.txt', 'r') as file:
             for line in file:
                 self.history.append(line)
+        # add all read items to the listbox
         for item in self.history:
             self.history_list.insert(tk.END, item)
 
