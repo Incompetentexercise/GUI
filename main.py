@@ -28,6 +28,9 @@ class Converter:
         self.K_out = 0
         self.float_input = 0
         self.output_string = ""
+        self.history_window = 0
+        self.help_window = 0
+        self.input_valid = None
 
         self.root = parent # parent should be an instance of tk.Tk()
 
@@ -203,13 +206,15 @@ class Converter:
         )
         self.save_button.grid(row=40, column=10, columnspan=11)
 
+        self.do_conversion()
+
     def open_help(self):
         self.help_button.config(state=tk.DISABLED)
-        help_window = Help(self)
+        self.help_window = Help(self)
 
     def open_history(self):
         self.history_button.config(state=tk.DISABLED)
-        history_window = History(self)
+        self.history_window = History(self)
 
     def save_conversion(self):
         self.output_string = "{inp}{in_unit}   --->   {C}C    {F}F    {K}K".format(
@@ -219,6 +224,9 @@ class Converter:
         print(self.output_string)
         with open("history.txt", 'a') as file:
             file.write(self.output_string+"\n")
+
+        if self.history_window:
+            self.history_window.refresh_list()
 
     # convert the inputted value to other units and set the output boxes
     # also does checks to ensure validity
@@ -236,30 +244,37 @@ class Converter:
                 if self.float_input < -273.15:
                     self.error_message.set('Input below absolute zero')
                     self.C_out, self.F_out, self.K_out = '>:(', '>:(', '>:('
+                    self.input_valid = False
                 else:
                     self.C_out = self.float_input
                     self.F_out = (self.float_input * 9 / 5) + 32
                     self.K_out = self.float_input + 273.15
+                    self.input_valid = True
 
             elif self.unit == 'f':
                 if self.float_input < -460:
                     self.error_message.set('Input below absolute zero')
                     self.C_out, self.F_out, self.K_out = ';-(', ';-(', ';-('
+                    self.input_valid = False
                 else:
                     self.C_out = (self.float_input - 32) * 5/9
                     self.F_out = self.float_input
                     self.K_out = ((self.float_input - 32) * 5/9) + 273.15
+                    self.input_valid = True
 
             elif self.unit == 'k':
                 if self.float_input < 0:
                     self.error_message.set('Input below absolute zero')
                     self.C_out, self.F_out, self.K_out = '(ノಠ益ಠ)ノ彡┻━┻', 'ヽ(`Д´)ﾉ︵ ┻━┻', '(╯°□°）╯︵ ┻━┻'
+                    self.input_valid = False
                 else:
                     self.C_out = self.float_input - 273.15
                     self.F_out = ((self.float_input - 273.15) * 9/5) + 32
                     self.K_out = self.float_input
+                    self.input_valid = True
 
         except ValueError: # float conversion failed
+            self.input_valid = False
             # if there is a value in the text box
             if self.input_temp.get() != '':
                 # input is present but invalid
@@ -290,6 +305,11 @@ class Converter:
         self.K_out_entry.delete(0, 'end')
         self.K_out_entry.insert(0, str(self.K_out))
 
+        if self.input_valid:
+            self.save_button.configure(state=tk.NORMAL)
+        else:
+            self.save_button.configure(state=tk.DISABLED)
+
 
 class Help:
     def __init__(self, parent):
@@ -314,6 +334,7 @@ class Help:
     def close(self):
         self.parent.help_button.config(state=tk.NORMAL)
         self.root.destroy()
+        self.parent.help_window = 0
 
 
 class History:
@@ -350,17 +371,23 @@ class History:
         # link history list to scrollbar
         self.history_list.config(yscrollcommand=self.list_scroll.set)
 
+        self.refresh_list()
+
+    def refresh_list(self):
+        self.history_list.delete(0, tk.END)
+
         # read history file and put contents into history list
         with open('history.txt', 'r') as file:
             for line in file:
                 self.history.append(line)
         # add all read items to the listbox
         for item in self.history:
-            self.history_list.insert(tk.END, item)
+            self.history_list.insert(0, item)
 
     def close(self):
         self.parent.history_button.config(state=tk.NORMAL)
         self.root.destroy()
+        # self.parent.history_window = 0
 
 
 if __name__ == "__main__":
