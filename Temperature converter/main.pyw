@@ -377,17 +377,19 @@ class History:
         self.history_list.delete(0, tk.END)
 
         # read history file and put contents into history list
-        with open('history.txt', 'r') as file:
-            for line in file:
-                self.history.append(line)
-        # add all read items to the listbox
-        for item in self.history:
-            self.history_list.insert(0, item)
+        try:
+            with open('history.txt', 'r') as file:
+                for line in file:
+                    self.history.append(line)
+            # add all read items to the listbox
+            for item in self.history:
+                self.history_list.insert(0, item)
+        except FileNotFoundError:
+            self.history_list.insert(0, "No history yet.")
 
     def close(self):
         self.parent.history_button.config(state=tk.NORMAL)
         self.root.destroy()
-        # self.parent.history_window = 0
 
 
 if __name__ == "__main__":
