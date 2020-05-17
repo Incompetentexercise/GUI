@@ -1,5 +1,11 @@
+"""
+Temperature converter GUI
+Requires python3# and tkinter
+April - May 2020
+Skye Pooley
+"""
+
 import tkinter as tk
-import tkinter.ttk as ttk
 
 fonts = {
     "heading": ("Arial", "14", "bold"),
@@ -13,29 +19,34 @@ colors = {
     'frame bg': '#FCFCFC'
 }
 help_text = "Type in the temperature you want to convert from into the input box, and select it's unit.\n\n" \
-            "The converted value will show in the output box.\n\n" \
-            "Take care not to enter a temperature below absolute zero.\n\n" \
+            "The converted values will show in the output box.\n\n" \
             "You can press the history button to view past conversions"
-decimal_places = 2
+decimal_places = 2 # number of decimal places to round the conversion output to
 
 
 class Converter:
     def __init__(self, parent):
-        self.unit = None
-        self.input_temp = None
+        """
+        Main window for temperature conversions.
+        Handles user input and output.
+        Parent of the History and Help windows.
+        """
+
+        self.unit = None # for text unit taken from unit radiobuttons
+        self.input_temp = None # for text version of temperature read from input box
+        # for converted temperatures
         self.C_out = 0
         self.F_out = 0
         self.K_out = 0
-        self.float_input = 0
-        self.output_string = ""
-        self.history_window = 0
-        self.help_window = 0
-        self.input_valid = None
+        self.float_input = 0 # input_temp converted to a float
+        self.output_string = "" # string to write to file when saving to history
+        self.history_window = False # pointer to the history window, when the window is closed the variable is set to False
+        self.input_valid = None # Whether the input can be converted and is above absolute zero
 
-        self.root = parent # parent should be an instance of tk.Tk()
+        self.root = parent # parent should be a frame or other container
 
         # Divide the window up into three sections to make layout easier
-        # far left frame for temperature input
+        # top frame for temperature input
         self.input_frame = tk.Frame(
             self.root,
             bg=colors['frame bg'],
@@ -44,13 +55,15 @@ class Converter:
             relief='sunken'
         )
         self.input_frame.grid(row=10, column=10)
+
         #middle frame for misc stuff
         self.center_frame = tk.Frame(
             self.root,
             padx=10, pady=10
         )
         self.center_frame.grid(row=20, column=10)
-        # right frame for temperature output
+
+        # bottom frame for temperature output
         self.output_frame = tk.Frame(
             self.root,
             bg=colors['frame bg'],
@@ -206,9 +219,12 @@ class Converter:
         )
         self.save_button.grid(row=40, column=10, columnspan=11)
 
-        self.do_conversion()
+        self.do_conversion() # call do conversion to update output boxes.
 
     def open_help(self):
+        """
+        Opens the help window and
+        """
         self.help_button.config(state=tk.DISABLED)
         self.help_window = Help(self)
 
@@ -317,6 +333,8 @@ class Help:
         self.root = tk.Toplevel(master=self.parent.root)
         self.root.title("Conversion Help")
         self.root.geometry("350x200")
+        self.root.iconbitmap("icons/help icon.ico")
+
         # bind the window close button to the close function in this class
         # important for enabling the help button
         self.root.protocol('WM_DELETE_WINDOW', self.close)
@@ -334,7 +352,7 @@ class Help:
     def close(self):
         self.parent.help_button.config(state=tk.NORMAL)
         self.root.destroy()
-        self.parent.help_window = 0
+        self.parent.history_window = False
 
 
 class History:
@@ -342,7 +360,8 @@ class History:
         self.parent = parent
         self.root = tk.Toplevel(master=self.parent.root)
         self.root.title("Conversion History")
-        # self.root.geometry("290x250")
+        self.root.iconbitmap("icons/history icon.ico")
+
         # bind the window close button to the close function in this class
         # important for enabling the history button
         self.root.protocol('WM_DELETE_WINDOW', self.close)
@@ -390,15 +409,16 @@ class History:
     def close(self):
         self.parent.history_button.config(state=tk.NORMAL)
         self.root.destroy()
+        self.parent.history_window = False
 
 
 if __name__ == "__main__":
     root = tk.Tk()
     root.title("Temperature converter")
-    # root.geometry("600x350")
+    root.iconbitmap("icons/icon.ico")
     main_frame = tk.Frame(
         root,
-        pady=20, padx=20
+        pady=20
     )
     main_frame.pack()
     main = Converter(main_frame)
